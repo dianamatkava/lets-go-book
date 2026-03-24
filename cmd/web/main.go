@@ -5,6 +5,13 @@ import (
 	"net/http"
 )
 
+func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("REQ %s %s", r.Method, r.URL.Path)
+		next(w, r) // call actual handler
+		log.Printf("RES %s %s", r.Method, r.URL.Path)
+	}
+}
 
 
 func main() {

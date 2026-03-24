@@ -2,23 +2,31 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"strconv"
 )
 
 
-func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("REQ %s %s", r.Method, r.URL.Path)
-		next(w, r) // call actual handler
-		log.Printf("RES %s %s", r.Method, r.URL.Path)
-	}
-}
-
-
 func home(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Hello World!")
+	files := []string{
+		"./ui/html/pages/base.html",
+		"./ui/html/pages/home.html",
+		"./ui/html/partials/nav.html",
+	}
+	file, err := template.ParseFiles(files...)
+	if err != nil {
+		log.Print(err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	err = file.ExecuteTemplate(w, "base", nil)  // write headers and body
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func getSnippets(w http.ResponseWriter, r *http.Request) {
