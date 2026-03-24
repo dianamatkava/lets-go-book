@@ -23,6 +23,9 @@ func main() {
 	mux.HandleFunc("POST /snippet", loggingMiddleware(createSnippet))
 	mux.HandleFunc("GET /snippet/createForm", loggingMiddleware(getSnippetCreateForm))
 
+	fs := http.FileServer(http.Dir("./ui/static/"))
+	mux.Handle("GET /static/", http.StripPrefix("/static", fs))
+
 	log.Print("starting server on :4000")
 
 	err := http.ListenAndServe(":4000", mux)  // how this actually works under the hood?
