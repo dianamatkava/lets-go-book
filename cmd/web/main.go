@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 )
@@ -15,6 +16,8 @@ func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 
 func main() {
+	address := flag.String("adr", ":4000", "HTTP network address")
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/{$}", loggingMiddleware(home))  // Restrict this route to exact matches on / only
 	// mux.HandleFunc("/static/", home)  // subtree path pattern, means /static/**, the first matching handler will run
@@ -26,8 +29,8 @@ func main() {
 	fs := http.FileServer(http.Dir("./ui/static/"))
 	mux.Handle("GET /static/", http.StripPrefix("/static", fs))
 
-	log.Print("starting server on :4000")
+	log.Printf("starting server on %s\n", *address)
 
-	err := http.ListenAndServe(":4000", mux)  // how this actually works under the hood?
+	err := http.ListenAndServe(*address, mux)  // how this actually works under the hood?
 	log.Fatal(err) // how to do other log levels? is it used in prod apps?
 }
