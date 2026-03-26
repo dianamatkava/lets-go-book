@@ -1,14 +1,17 @@
 package main
 
 import (
-	"fmt"
+	"log/slog"
 	"os"
-	"github.com/joho/godotenv"
+	"log"
 )
 
 
 func main() {
-	godotenv.Load()
-	hostName := os.Getenv("HOST_NANE")
-	fmt.Println(hostName)
+	loggerHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
+	logger := slog.New(loggerHandler)
+
+	log.Fatal("Error")
+
+	logger.Info("Hello World")
 }
