@@ -16,14 +16,12 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	}
 	file, err := template.ParseFiles(files...)
 	if err != nil {
-		app.logger.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
 	err = file.ExecuteTemplate(w, "base", nil)  // write headers and body
 	if err != nil {
-		app.logger.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
 }
@@ -36,7 +34,7 @@ func (app *application) getSnippets(w http.ResponseWriter, r *http.Request) {
 func (app *application) getSnippet(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil || id < 1 {
-		http.NotFound(w, r)
+		app.clientError(w, r, http.StatusNotFound)
 		return
 	}
 	fmt.Fprintf(w, "Get specific snippet by ID: %d", id)
