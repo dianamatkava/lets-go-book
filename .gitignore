@@ -1,2 +1,2 @@
 .ide
-./test/*
+cmd/test
