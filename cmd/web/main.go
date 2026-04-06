@@ -3,10 +3,12 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
-	"net"
+
+	"github.com/dianamatkava/snippetbox/cmd/internal/models"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -14,7 +16,7 @@ import (
 // application-wide dependencies
 type application struct {
 	logger *slog.Logger
-	db *sql.DB
+	snippets *models.SnippetModel
 }
 
 
@@ -32,8 +34,8 @@ func openDB(driverName string, dataSourceName string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	errPing := db.Ping()
-	if errPing != nil {
+	err = db.Ping()
+	if err != nil {
 		db.Close()
 		return nil, err
 	}
@@ -43,12 +45,11 @@ func openDB(driverName string, dataSourceName string) (*sql.DB, error) {
 
 
 func main() {
-	net.Listen()
 	address := flag.String("adr", ":4000", "HTTP network address")
 	
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	
-	db, dbErr := openDB("pgx", "postgres://postgres:postgres@localhost/postgres?parseTime=true")
+	db, dbErr := openDB("pgx", "postgres://postgres:postgres@localhost/postgres")
 	if dbErr != nil {
 		logger.Error(dbErr.Error())
 		os.Exit(1)
@@ -56,14 +57,20 @@ func main() {
 
 	defer db.Close()
 
+	if db == nil {
+		log.Printf("DB is NIL")
+	}
+
 	app := &application{
 		logger: logger,
-		db: db,
+		snippets: &models.SnippetModel{DB: db},
 	}
 	
 	logger.Info("starting server on", "address", *address)
 
-	err := http.ListenAndServe(*address, app.routes())  // how this actually works under the hood?
-	logger.Error(err.Error())
-	os.Exit(1)
+	err := http.ListenAndServe(*address, app.routes())
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 }

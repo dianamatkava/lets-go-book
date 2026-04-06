@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
+
+	"github.com/dianamatkava/snippetbox/cmd/internal/models"
 )
 
 
@@ -28,7 +31,11 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) getSnippets(w http.ResponseWriter, r *http.Request) {
 	app.logger.Info("Display all snippets")
-	fmt.Fprint(w, "Display all snippets")
+	snippets, err := app.snippets.Latest()
+	if err != nil {
+		app.serverError(w, r, err)
+	}
+	fmt.Fprintf(w, "Display all snippets %+v", snippets)
 }
 
 func (app *application) getSnippet(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +44,18 @@ func (app *application) getSnippet(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, r, http.StatusNotFound)
 		return
 	}
-	fmt.Fprintf(w, "Get specific snippet by ID: %d", id)
+
+	snippet, err := app.snippets.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	fmt.Fprintf(w, "Snippet: %+v", snippet)
 }
 
 func (app *application) getSnippetCreateForm(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +63,14 @@ func (app *application) getSnippetCreateForm(w http.ResponseWriter, r *http.Requ
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Server", "Go")
-	w.WriteHeader(http.StatusCreated)  // why I dont specify that it is a status code and not something else?
-	fmt.Fprintf(w, "Create snippet %d", 12)
+	title := "O snail"
+    content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
+    expires := 7
+
+	id, err := app.snippets.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
 }
