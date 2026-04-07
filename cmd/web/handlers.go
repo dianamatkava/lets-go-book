@@ -3,37 +3,28 @@ package main
 import (
 	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/dianamatkava/snippetbox/cmd/internal/models"
 )
 
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	files := []string{
-		"./ui/html/pages/base.html",
-		"./ui/html/pages/home.html",
-		"./ui/html/partials/nav.html",
-	}
-	file, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
 
 	snippets, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
-	templateData := SnippetsTemplate{Snippets: snippets}
-	err = file.ExecuteTemplate(w, "base", templateData)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
+	templateData := SnippetsTemplate{
+		Snippets: snippets, 
+		CommonTemplateData: CommonTemplateData{
+			CurrentYear: time.Now().Year(),
+		},
 	}
+	app.render("home.html", templateData, w, r, http.StatusOK)
 }
 
 func (app *application) getSnippets(w http.ResponseWriter, r *http.Request) {
@@ -61,25 +52,12 @@ func (app *application) getSnippet(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-	templateData := SnippetTemplate{Snippet: snippet}
-
-	files, err := template.ParseFiles(
-		"./ui/html/pages/base.html",
-		"./ui/html/pages/view.html",
-		"./ui/html/partials/nav.html",
-	)
-
-	if err != nil {
-		app.serverError(w, r, err)
-		return
+	templateData := SnippetTemplate{Snippet: snippet,
+		CommonTemplateData: CommonTemplateData{
+			CurrentYear: time.Now().Year(),
+		},
 	}
-
-	err = files.ExecuteTemplate(w, "base", templateData)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+	app.render("view.html", templateData, w, r, http.StatusOK)
 }
 
 func (app *application) getSnippetCreateForm(w http.ResponseWriter, r *http.Request) {

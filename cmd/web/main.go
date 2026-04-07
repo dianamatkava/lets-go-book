@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
-	"log"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
@@ -15,8 +15,9 @@ import (
 
 // application-wide dependencies
 type application struct {
-	logger *slog.Logger
-	snippets *models.SnippetModel
+	logger 		*slog.Logger
+	snippets 	*models.SnippetModel
+	templates 	map[string]*template.Template
 }
 
 
@@ -54,21 +55,24 @@ func main() {
 		logger.Error(dbErr.Error())
 		os.Exit(1)
 	}
-
 	defer db.Close()
+	
 
-	if db == nil {
-		log.Printf("DB is NIL")
+	templateCache, err := cacheTemplates()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
 
 	app := &application{
-		logger: logger,
-		snippets: &models.SnippetModel{DB: db},
+		logger: 	logger,
+		snippets: 	&models.SnippetModel{DB: db},
+		templates: 	templateCache,
 	}
 	
 	logger.Info("starting server on", "address", *address)
 
-	err := http.ListenAndServe(*address, app.routes())
+	err = http.ListenAndServe(*address, app.routes())
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)

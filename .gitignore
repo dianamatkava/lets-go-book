@@ -1,3 +1,4 @@
 .ide
-cmd/test
+cmd/playground
 cmd/practice
+.env
