@@ -22,7 +22,14 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
-	err = file.ExecuteTemplate(w, "base", nil)  // write headers and body
+
+	snippets, err := app.snippets.Latest()
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	templateData := SnippetsTemplate{Snippets: snippets}
+	err = file.ExecuteTemplate(w, "base", templateData)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -55,7 +62,24 @@ func (app *application) getSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Snippet: %+v", snippet)
+	templateData := SnippetTemplate{Snippet: snippet}
+
+	files, err := template.ParseFiles(
+		"./ui/html/pages/base.html",
+		"./ui/html/pages/view.html",
+		"./ui/html/partials/nav.html",
+	)
+
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	err = files.ExecuteTemplate(w, "base", templateData)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 }
 
 func (app *application) getSnippetCreateForm(w http.ResponseWriter, r *http.Request) {
