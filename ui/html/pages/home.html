@@ -10,7 +10,8 @@
   {{range .Snippets}}
   <tr>
     <td><a href="/snippet/{{.ID}}">{{.Title}}</a></td>
-    <td>{{.Created}}</td>
+    <!-- Use the new template function here -->
+    <td>{{HumanizeDate .Created}}</td>
     <td>#{{.ID}}</td>
   </tr>
   {{end}}

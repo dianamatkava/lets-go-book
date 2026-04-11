@@ -29,3 +29,7 @@ func (app *application) render(key string, data any, w http.ResponseWriter, r *h
 func GetCurrentYear() int {
 	return time.Now().Year()
 }
+
+func HumanizeDate(t time.Time) string {
+    return t.Format("02 Jan 2006 at 15:04")
+}
