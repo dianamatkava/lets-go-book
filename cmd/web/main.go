@@ -21,14 +21,6 @@ type application struct {
 }
 
 
-func (app *application) loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		app.logger.Info("REQ", "Method", r.Method, "URL", r.URL.Path)
-		next(w, r) // call actual handler
-		app.logger.Info("RES", "Method", r.Method, "URL", r.URL.Path)
-	}
-}
-
 func openDB(driverName string, dataSourceName string) (*sql.DB, error) {
 	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {

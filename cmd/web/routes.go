@@ -1,19 +1,24 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
 
-func (app *application) routes() *http.ServeMux {
+	"github.com/justinas/alice"
+)
+
+func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	fs := http.FileServer(http.Dir("./ui/static/"))
 	mux.Handle("GET /static/", http.StripPrefix("/static", fs))
 
-	mux.HandleFunc("/{$}", app.loggingMiddleware(app.home))  // Restrict this route to exact matches on / only
+	mux.HandleFunc("/{$}", app.home)  // Restrict this route to exact matches on / only
 	// mux.HandleFunc("/static/", home)  // subtree path pattern, means /static/**, the first matching handler will run
-	mux.HandleFunc("GET /snippet", app.loggingMiddleware(app.getSnippets))
-	mux.HandleFunc("GET /snippet/{id}", app.loggingMiddleware(app.getSnippet))
-	mux.HandleFunc("POST /snippet", app.loggingMiddleware(app.createSnippet))
-	mux.HandleFunc("GET /snippet/createForm", app.loggingMiddleware(app.getSnippetCreateForm))
+	mux.HandleFunc("GET /snippet", app.getSnippets)
+	mux.HandleFunc("GET /snippet/{id}", app.getSnippet)
+	mux.HandleFunc("POST /snippet", app.createSnippet)
+	mux.HandleFunc("GET /snippet/createForm", app.getSnippetCreateForm)
 
-	return mux
+	middlewares := alice.New(app.panicRecoverMiddleware, app.loggingMiddleware, SecureHeadersMiddleware)
+	return middlewares.Then(mux)
 }
