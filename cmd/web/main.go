@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/dianamatkava/snippetbox/cmd/internal/models"
-
+	"github.com/go-playground/form/v4"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
@@ -18,6 +18,7 @@ type application struct {
 	logger 		*slog.Logger
 	snippets 	*models.SnippetModel
 	templates 	map[string]*template.Template
+	formDecoder *form.Decoder
 }
 
 
@@ -48,7 +49,6 @@ func main() {
 		os.Exit(1)
 	}
 	defer db.Close()
-	
 
 	templateCache, err := cacheTemplates()
 	if err != nil {
@@ -56,10 +56,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	formDecoder := form.NewDecoder()
+
 	app := &application{
-		logger: 	logger,
-		snippets: 	&models.SnippetModel{DB: db},
-		templates: 	templateCache,
+		logger: 	 logger,
+		snippets: 	 &models.SnippetModel{DB: db},
+		templates: 	 templateCache,
+		formDecoder: formDecoder,
 	}
 	
 	logger.Info("starting server on", "address", *address)

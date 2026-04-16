@@ -7,10 +7,29 @@ import (
 	"github.com/dianamatkava/snippetbox/cmd/internal/models"
 )
 
+type Form struct {
+    Errors map[string]string
+}
+
+func (form *Form) Valid() bool {
+    return len(form.Errors) == 0
+}
+
+func (form *Form) checkField(ok bool, field string, err string) {
+    if !ok {
+        if form.Errors == nil {
+            form.Errors = make(map[string]string)
+        }
+
+        if _, exists := form.Errors[field]; !exists {
+            form.Errors[field] = err
+        }
+    }
+}
 
 type CommonTemplateData struct {
 	CurrentYear int
-}
+} 
 
 type SnippetTemplate struct {
 	CommonTemplateData
@@ -20,6 +39,14 @@ type SnippetTemplate struct {
 type SnippetsTemplate struct {
 	CommonTemplateData
 	Snippets []models.Snippet
+}
+
+type SnippetCreateFormTemplate struct {
+    Form                `form:"-"`
+    CommonTemplateData  `form:"-"`
+    Title       string  `form:"title"`
+    Content     string  `form:"content"`
+    Expires     int     `form:"expires"`
 }
 
 

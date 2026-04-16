@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dianamatkava/snippetbox/cmd/internal/models"
+	"github.com/dianamatkava/snippetbox/cmd/internal/validator"
 )
 
 
@@ -65,22 +66,24 @@ func (app *application) getCreateFormSnippet(w http.ResponseWriter, r *http.Requ
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	var form SnippetCreateFormTemplate
+	err := app.parseFormData(&form, r)
 	if err != nil {
 		app.clientError(w, r, http.StatusBadRequest)
 		return
 	}
 
-	title := r.PostForm.Get("title")
-	content := r.PostForm.Get("content")
-	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
-
-	if err != nil {
-		app.clientError(w, r, http.StatusBadRequest)
+	form.checkField(validator.NoBlank(form.Title), "title", "This field cannot be blank")
+	form.checkField(validator.MaxChar(form.Title, 100), "title", "This field cannot be more than 100 characters long")
+	form.checkField(validator.NoBlank(form.Content), "content", "This field cannot be blank")
+	form.checkField(validator.Contains(form.Expires, []int{1, 7, 365}), "expires", "This field must equal 1, 7 or 365")
+	
+	if !form.Valid() {
+		app.render("create.html", form, w, r, http.StatusUnprocessableEntity)
 		return
 	}
 
-	id, err := app.snippets.Insert(title, content, expires)
+	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
 	if err != nil {
 		app.serverError(w, r, err)
 		return

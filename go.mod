@@ -3,6 +3,7 @@ module github.com/dianamatkava/snippetbox
 go 1.26.1
 
 require (
+	github.com/go-playground/form/v4 v4.3.0
 	github.com/jackc/pgx/v5 v5.9.1
 	github.com/justinas/alice v1.2.0
 )

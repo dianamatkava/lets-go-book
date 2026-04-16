@@ -2,9 +2,12 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/go-playground/form/v4"
 )
 
 
@@ -25,6 +28,24 @@ func (app *application) render(key string, data any, w http.ResponseWriter, r *h
 	w.WriteHeader(status)
 	buffer.WriteTo(w)
 }
+
+
+func (app *application) parseFormData(v any, r *http.Request) error {
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
+
+	err = app.formDecoder.Decode(v, r.PostForm)
+	if err != nil {
+		if _, ok := errors.AsType[*form.InvalidDecoderError](err); ok {
+			panic(err) 
+		}
+		return err
+	}
+	return nil
+}
+
 
 func GetCurrentYear() int {
 	return time.Now().Year()
