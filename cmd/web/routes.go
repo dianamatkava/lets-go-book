@@ -17,7 +17,7 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("GET /snippet", app.getSnippets)
 	mux.HandleFunc("GET /snippet/{id}", app.getSnippet)
 	mux.HandleFunc("POST /snippet", app.createSnippet)
-	mux.HandleFunc("GET /snippet/createForm", app.getSnippetCreateForm)
+	mux.HandleFunc("GET /snippet/createForm", app.getCreateFormSnippet)
 
 	middlewares := alice.New(app.panicRecoverMiddleware, app.loggingMiddleware, SecureHeadersMiddleware)
 	return middlewares.Then(mux)

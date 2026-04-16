@@ -60,14 +60,25 @@ func (app *application) getSnippet(w http.ResponseWriter, r *http.Request) {
 	app.render("view.html", templateData, w, r, http.StatusOK)
 }
 
-func (app *application) getSnippetCreateForm(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Create form")
+func (app *application) getCreateFormSnippet(w http.ResponseWriter, r *http.Request) {
+	app.render("create.html", nil, w, r, http.StatusOK)
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-	title := "O snail"
-    content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
-    expires := 7
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, r, http.StatusBadRequest)
+		return
+	}
+
+	title := r.PostForm.Get("title")
+	content := r.PostForm.Get("content")
+	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+
+	if err != nil {
+		app.clientError(w, r, http.StatusBadRequest)
+		return
+	}
 
 	id, err := app.snippets.Insert(title, content, expires)
 	if err != nil {
